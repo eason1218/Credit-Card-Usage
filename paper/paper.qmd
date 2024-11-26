@@ -1,7 +1,7 @@
 ---
 title: "Credit card used puzzle"
 author: 
-  - A
+  - YiZhuo Li
 date: today
 date-format: long
 abstract: "The purpose of this study is to investigate the effects of gender (Sex) and employment status (Emp) and their interaction (Sex_Emp) on credit card usage behavior (UsedCard). The results based on the logistic regression model show that employment status has a significant positive effect on credit card use, and employed people are more likely to use credit cards compared to those who are not employed. Meanwhile, the independent effect of gender is significant in the base model, indicating that male users are more likely to use credit cards; however, its significance is weakened after the introduction of the interaction term, indicating that the effect of gender on credit card use may be moderated by other variables. In addition, the interaction between gender and employment status does not reach a significant level, suggesting that the effects of the two on credit card use are mainly independent, rather than amplifying or weakening their effects through joint effects."
