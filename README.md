@@ -12,7 +12,7 @@ The repo is structured as:
 
 -   `data/raw_data` will be finish soon.
 -   `data/analysis_data` will be finish soon.
--   `model` contains fitted models. 
+-   `model` will be finish soon.
 -   `other` will be finish soon.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
 -   `scripts` will be finish soon.
