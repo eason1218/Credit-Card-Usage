@@ -12,11 +12,11 @@ The repo is structured as:
 
 -   `data/raw_data` will be finish soon.
 -   `data/analysis_data` will be finish soon.
--   `model` will be finish soon.
--   `other` will be finish soon.
+-   `models` contains fitted models. 
+-   `other` contains about literature, LLM chat interactions, and sketches.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
--   `scripts` will be finish soon.
-
+-   `scripts` contains the R scripts used to simulate, download, clean, test and model data.
+  
 ## Statement on LLM usage
 
 Some coding and editing writing in this project is done with the help of ChatGPT 4o and the entire chat history is available in usage.txt located in the "other/llm_usage/LLM_USAGE.txt".
