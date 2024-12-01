@@ -5,9 +5,9 @@
 
 This study utilized data from [global findex](https://www.worldbank.org/en/publication/globalfindex). examines the effects of gender and employment status on credit card usage, revealing that employment significantly increases credit card use, while gender has an independent but less pronounced influence. The interaction between the two factors is not significant, suggesting their effects are primarily independent. Policy recommendations focus on enhancing employment opportunities and designing inclusive financial products to promote credit card adoption, especially among women. The analysis was performed using R programming and is presented in the final research paper in PDF format.
 
-## Raw Data set
+## Data set
 
-The data in this paper come from the World Bank's Microdata Library, which provides free access to microdata produced by the World Bank and other international organizations, statistical agencies, and various subjects in developing countries. The data for this paper is available at https://microdata.worldbank.org/index.php/catalog/4607/data-dictionary.
+The data in this repo come from the World Bank's Microdata Library, which provides free access to microdata produced by the World Bank and other international organizations, statistical agencies, and various subjects in developing countries. The data for this paper is available at https://microdata.worldbank.org/index.php/catalog/4607/data-dictionary.
 
 ## File Structure
 
