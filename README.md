@@ -14,7 +14,7 @@ The data in this repo come from the World Bank's Microdata Library, which provid
 The repo is structured as:
 
 -   `data/00-simulate_data` contains the the simulated data used as the preview of actual dataset.
--   `data/01-raw_data` contains the the raw data used for analysis.
+-   `data/01-raw_data` contains the way download raw data used for analysis.
 -   `data/02-analysis_data` contains the cleaned dataset that was constructed.
 -   `models` contains fitted models. 
 -   `other` contains about literature, LLM chat interactions, and sketches.
