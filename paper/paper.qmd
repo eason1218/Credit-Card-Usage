@@ -1,10 +1,11 @@
 ---
-title: "Credit card used puzzle"
+title: "Gender, Employment, and Credit Card Usage: Exploring Behavioral Dynamics"
 author: 
-  - YiZhuo Li
-date: today
+  - Yizhuo Li
+thanks: "A GitHub Repository containing all data, R code, and other files used in this investigation is located here: <https://github.com/eason1218/credit_card.git>"
+date: Nov, 30, 2024
 date-format: long
-abstract: "The purpose of this study is to investigate the effects of gender (Sex) and employment status (Emp) and their interaction (Sex_Emp) on credit card usage behavior (UsedCard). The results based on the logistic regression model show that employment status has a significant positive effect on credit card use, and employed people are more likely to use credit cards compared to those who are not employed. Meanwhile, the independent effect of gender is significant in the base model, indicating that male users are more likely to use credit cards; however, its significance is weakened after the introduction of the interaction term, indicating that the effect of gender on credit card use may be moderated by other variables. In addition, the interaction between gender and employment status does not reach a significant level, suggesting that the effects of the two on credit card use are mainly independent, rather than amplifying or weakening their effects through joint effects."
+abstract: "This study examines how gender (Sex), employment status (Emp), and their interaction (Sex_Emp) influence credit card usage (UsedCard). Using a logistic regression model, we find that employed individuals are significantly more likely to use credit cards, highlighting the importance of financial stability. While men initially appear more likely than women to use credit cards, this difference diminishes when considering the interaction with employment status, suggesting gender's influence is shaped by other factors. The interaction between gender and employment status was not significant, indicating that these factors operate largely independently. These findings provide an understanding of the independent roles of gender and employment in shaping financial behavior."
 
 format: pdf
 number-sections: true
@@ -23,169 +24,140 @@ library(here)
 library(broom)
 library(sjPlot)
 library(corrplot)
-library(reshape2)
 library(tidyverse)
 library(texreg)
 library(stargazer)
 library(interactions)
-library(sjPlot)
-
+library(arrow)
+library(knitr)
 ```
+
 \newpage
 
 # Introduction
 
-The use of credit cards has become an important part of the modern financial system, providing individuals with convenience, access to credit and the ability to manage their personal finances. However, credit card adoption and use often reflect deeper social and economic patterns, influenced by individual demographic factors such as gender and employment status. The purpose of this study is to explore the independent and joint effects of gender and employment status on credit card use in an attempt to reveal how these factors influence consumer behavior in financial markets.
+The use of credit cards has become a central component of the modern financial system, offering individuals convenience, access to credit, and tools to manage their personal finances. However, patterns of credit card adoption and use often reflect underlying social and economic dynamics, influenced by demographic factors such as gender and employment status. This study examines the independent and joint effects of gender and employment status on credit card use, with the aim of uncovering how these factors shape consumer behavior in financial markets.
 
-Credit cards are more than just a payment method; they are an expression of financial inclusion and empowerment. In this context, gender and employment status are particularly important as they reflect economic independence and social roles. Women are traditionally considered to be more risk-averse in financial matters, so their patterns of credit card use may differ from those of men. Similarly, employment status not only determines financial capability but also influences the likelihood of using financial products. By examining these factors together, we can gain insight into whether social constructs such as gender roles and economic indicators such as employment contribute to each other or affect credit card behavior separately.
+Credit cards are more than just a payment method; they symbolize financial inclusion and empowerment. In this context, gender and employment status are particularly significant as they reflect economic independence and social roles. Women, traditionally considered more risk-averse in financial matters, may exhibit different credit card usage patterns compared to men. Employment status, which determines financial capability, also significantly influences the likelihood of engaging with financial products. By analyzing these factors together, this study seeks to determine whether social constructs such as gender roles and economic indicators such as employment interact to influence credit card behavior or act independently.
 
-Existing research has extensively documented the role of income and education in determining credit card use. Higher levels of income and education are associated with higher rates of credit card use, reflecting increased financial literacy and competence. In addition, gender differences in financial behavior have been noted, with men typically exhibiting greater risk-taking tendencies, including higher rates of credit card use. Employment, as a determinant of stable income, is also associated with credit behavior, with the employed more likely to own and use credit cards. However, research on the interaction between gender and employment status is limited, leaving a gap in understanding how these factors work together to influence credit card use.
+While existing research has extensively documented the role of income and education in determining credit card usage—showing that higher income and education levels correlate with greater financial literacy and competence—limited attention has been given to the interaction between gender and employment status. Gender differences in financial behavior are well-established, with men typically exhibiting greater risk-taking tendencies and higher rates of credit card use [@braxton2023decomposing]. Similarly, employment, as a source of stable income, is strongly associated with credit card ownership and usage. However, the joint influence of gender and employment remains underexplored, leaving a gap in understanding how these factors interact to shape financial behavior.
 
-This study not only aims to fill this gap, but also integrates the findings with broader socioeconomic dynamics. For example, working women may experience unique financial pressures or opportunities that affect their use of credit cards. Similarly, the interplay between age, income, and employment may complicate the gendered impact of financial decision-making.
+This study addresses this gap by analyzing data from the **Global Findex database** [@globalfindex], focusing on the interplay between gender, employment status, and credit card usage. It also integrates findings within broader socioeconomic dynamics, such as the unique financial pressures and opportunities faced by working women or the interplay between age, income, and employment in influencing financial decisions. Furthermore, this research contributes to ongoing discussions about financial inclusion by highlighting underserved groups, such as the unemployed or women with limited access to financial products. By uncovering these dynamics, the study offers valuable insights for policymakers and financial institutions seeking to design interventions that reduce gaps in credit access, ensure equitable financial opportunities, and foster a more inclusive credit environment.
 
-In addition, this study contributes to the growing discussion of financial inclusion by highlighting underserved groups, such as the unemployed or women with limited access to financial products. By understanding these dynamics, policymakers and financial institutions can design targeted interventions to reduce gaps in access to credit, ensure equitable financial opportunities and create a more inclusive credit environment.
-
+The paper is structured as follows: Section 2 provides an overview of the data, using data from the **Global Findex database** [@globalfindex], focusing on the preparation and cleaning process to ensure the accuracy of the analysis. This includes deriving key variables such as gender, employment status, and credit card usage from the Global Financial Inclusion Database. Section 3 introduces the logistic regression model used to examine the relationship between gender, employment status, and their interaction on credit card usage behavior. This section also justifies the choice of control variables like income, education, and age. Section 4 presents the results of the analysis, including the significance of each variable and visualizations to interpret their impact. Section 5 discusses the findings in the context of broader socioeconomic dynamics, implications for policy, and limitations of the study, offering recommendations for future research directions. Data analysis was using statistical programming language **R** [@citeR], with packages tidyverse [@tidyverse], here [@here], caret [@caret], broom [@broom], sjPlot [@sjPlot], corrplot [@corrplot], reshape2 [@reshape2], texreg [@texreg], dataverse [@stargazer], and interactions [@interactions]. 
 
 # Data
 
 ## Overview
-Data analysis was using statistical programming language **R** [@citeR], with packages tidyverse [@tidyverse], here [@here], caret [@caret], broom [@broom], sjPlot [@sjPlot], corrplot [@corrplot], reshape2 [@reshape2], texreg [@texreg], dataverse [@stargazer], and interactions [@interactions]. The data for this study comes from the **Global Findex database** [@globalfindex]. It is a questionnaire on the Financial Inclusion Index, conducted by Gallup, Inc out of the survey in association with its annual Gallup World Poll. The Global Financial Inclusion Index 2021 data is collected from a nationally representative survey of nearly 145,000 adults in 139 economies. This database is the only global demand-side data source that allows for global and regional cross-country analysis to guide how adults save, borrow, repay, and manage financial risk.
-```{r, quiet=TRUE}
-#| warning: false
-#| message: false
-#| echo:    false
 
-
-data <- read.csv('raw_data.csv', fileEncoding = 'gbk')
-```
-
-```{r, quiet=TRUE}
-#| warning: false
-#| message: false
-#| echo:    false
-data <- data[, c('fin8', 'female', 'age', 'educ', 'inc_q', 'emp_in')]
-colnames(data) <- c('UsedCard', 'Sex', 'Age', 'Edu', 'Income', 'Emp')
-
-unique_values <- lapply(colnames(data), function(column) {
-  paste(column, paste(unique(data[[column]]), collapse = ", "))
-})
-
-```
-
-```{r, quiet=TRUE}
-#| warning: false
-#| message: false
-#| echo:    false
-data$UsedCard <- ifelse(data$UsedCard %in% c(3, 4), NA, 
-                        ifelse(data$UsedCard == 2, 0, data$UsedCard))
-data$Sex <- data$Sex - 1
-data$Age[data$Age >= 75] <- NA
-data$Edu <- ifelse(data$Edu %in% c(4, 5), NA, data$Edu)
-data$Emp <- ifelse(data$Emp == 2, 0, data$Emp)
-
-data <- na.omit(data)
-data <- data.frame(lapply(data, as.numeric))
-```
-
-
-```{r, quiet=TRUE}
-#| warning: false
-#| message: false
-#| echo:    false
-for (column in colnames(data)) {
-  unique_values[[column]] <- paste(column, paste(unique(data[[column]]), collapse = ", "))
-}
-```
-```{r, quiet=TRUE}
-#| warning: false
-#| message: false
-#| echo:    false
-data$Sex_Emp = data$Sex * data$Emp
-```
+The data for this study comes from the **Global Findex database** [@globalfindex]. It is a questionnaire on the Financial Inclusion Index, conducted by Gallup, Inc. out of the survey in association with its annual Gallup World Poll. Analysis by programming language **R** [@citeR]. The Global Financial Inclusion Index 2021 data is collected from a nationally representative survey of nearly 145,000 adults in 139 economies, allowing for detailed analysis. This database is the only global demand-side data source that allows for global and regional cross-country analysis to guide how adults save, borrow, repay, and manage financial risk.
 
 \newpage
 
-## Variables
+## Data Cleaning and Variables
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: tbl-table10
+Since this paper focuses on analyzing the impact of gender and incumbency status on an individual's use of credit cards, I conducted the following data-cleaning process and selected the variables of interest. The data set was cleaned by selecting the main research variables and control variables for this paper, renaming column names, removing samples with missing values, removing information not relevant to this study, and generating interaction terms for gender and incumbency status. After cleaning, 28,859 rows of data remained in the dataset. 
+
+```{r, quiet=TRUE}
+#| label: tbl-table1
 #| warning: false
 #| message: false
 #| echo:    false
+data <- read_parquet("analysis_data.parquet")
 
-model2 <- glm(UsedCard ~ Sex + Emp + Sex_Emp + Age + Income + Edu, data = data, family = "binomial")
+data_head <- head(data)
 
-tidy(model2)
+kable(
+  data_head,
+  caption = "Preview of Analysis Data",
+  format = "html",
+  digits = 3,
+  align = "c"
+)
 ```
+@tbl-table1 shows a preview of the cleaned dataset. The raw variable fin8 renamed to UsedCard indicates the respondent's credit card usage. In the original data, 1 indicates that the respondent has used a credit card, 2 indicates that the respondent has not used a credit card, and there are other unknown variables and null values. For this variable, the unknown value is first replaced with a null value the null sample is eliminated, and then the value 2 is changed to 0. That is, the cleaned data is 0 for not using a credit card and 1 for having used a credit card.
 
-The original variable female was renamed to Sex to indicate the gender of the respondent. In the original data 1 indicates female and 2 indicates male. All values of this variable were subtracted from 1, i.e., 0 indicates female and 1 indicates male.
+The original variable female was renamed to Sex to indicate the respondent's gender. In the original data 1 indicates female and 2 indicates male. All values of this variable were subtracted from 1, i.e., 0 indicates female and 1 indicates male.
 
-The original variable age was renamed to Age to indicate the age of the respondent. The variable Age is the true age of the respondent, the age range of the respondents in the original data is from 15 to 99 years old, due to the fact that the percentage of respondents older than 75 years old is very small, so the sample data of respondents older than 75 years old are excluded from this paper.
+The original variable age was renamed to Age to indicate the respondent's age. The variable Age is the true age of the respondent, the age range of the respondents in the original data is from 15 to 99 years old, because the percentage of respondents older than 75 years old is very small, so the sample data of respondents older than 75 years old are excluded from this paper.
 
-The original variable educ was renamed Edu to indicate the respondent's level of education. In the original data, 1 means completed primary school, 2 means completed secondary school, and 3 means completed tertiary education or more. there are null and unknown values in the original data, and the data processing removes these null and unknown values.
+The original variable Educ was renamed Edu to indicate the respondent's level of education. In the original data, 1 means completed primary school, 2 means completed secondary school, and 3 means completed tertiary education or more. There are null and unknown values in the original data, and the data processing removes these null and unknown values.
 
 The original variable inc_q was renamed to Income, indicating income level. The original data is a degree variable that categorizes all respondents into five income levels, Poorest, Second, Middle, Fourth, and Richest, which are denoted by 1, 2, 3, 4, and 5, respectively.
 
 The original variable emp_in was renamed Emp to indicate employment status. In the original data 1 means employed, 2 means unemployed, and there is also a null value. For this variable first remove the null sample and then change the value 2 to 0. i.e. cleaned data 0 means career and 1 means employed.
 
-An interaction term, Sex_Emp, was generated using Sex multiplied by Emp in order to examine the interaction of gender and employment status on credit card use. Sex and Emp have a total of four categories, where 0,0 denotes unemployed females, 0,1 denotes employed females, 1,0 denotes unemployed males, and 1,1 denotes employed males. The interaction term, Sex_Emp, is used in the analysis of the data to determine the effect of gender on credit card use. In subsequent modeling, I will focus on the differences and effects of credit card use among these four categories.
+An interaction term, Sex_Emp, was generated using Sex multiplied by Emp to examine the interaction of gender and employment status on credit card use. Sex and Emp have a total of four categories, where 0,0 denotes unemployed females, 0,1 denotes employed females, 1,0 denotes unemployed males, and 1,1 denotes employed males. The interaction term, Sex_Emp, is used in the analysis of the data to determine the effect of gender on credit card use. In subsequent modeling, I will focus on the differences and effects of credit card use among these four categories.
 
+\newpage
 
+## Variables of Interest
 
+The main purpose of this paper is to investigate the difference between gender (Sex) and incumbency status (Emp) and its combination variable (Sex_Emp) on card usage (UsedCard). Therefore, the explanatory variable in this paper is UsedCard, the explanatory variables are Gender (Sex) and Employment Status (Emp) and its combination (Sex_Emp), and the control variables are Age, Education (Edu), and Income (Income).
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: tbl-table1
+```{r, quiet=TRUE, r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: tbl-table2
 #| warning: false
 #| message: false
 #| echo:    false
-model1 <- glm(UsedCard ~ Sex + Emp + Age + Income + Edu, data = data, family = "binomial")
 
-tidy(model1)
+desc <- data.frame(
+  Variables = c("Explained Variable", "Explanatory Variables", "", "", "Control Variables", "", "", ""),
+  Name = c("UsedCard", "Sex", "Emp", "Sex_Emp", "Age", "Edu", "Income", ""),
+  Description = c(
+    "Whether credit card has been used",
+    "Gender of respondents",
+    "Employment situation of respondents",
+    "Interaction term for gender and employment status",
+    "Age of respondents",
+    "Educational level of respondents",
+    "Income level of respondents",
+    ""
+  )
+)
+
+kable(desc, col.names = c("Variables", "Name", "Description"), caption = "Important variables and their interpretation")
 ```
 
 \newpage
 
 ## Data Analysis
 
-```{r, quiet=TRUE}
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure1
 #| warning: false
 #| message: false
 #| echo:    false
-# 数据清理：将分类变量设为因子
+
 data$UsedCard <- as.factor(data$UsedCard)
 data$Sex <- as.factor(data$Sex)
 data$Edu <- as.factor(data$Edu)
 data$Emp <- as.factor(data$Emp)
-```
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure4
-#| warning: false
-#| message: false
-#| echo:    false
-usedcard_summary <- data %>%
+UsedCard_summary <- data %>%
   group_by(UsedCard) %>%
   summarise(Count = n())
 
-# 添加百分比信息
-usedcard_summary <- usedcard_summary %>%
-  mutate(Percentage = round(Count / sum(Count) * 100, 1),
-         Label = paste0(Percentage, "%"))
+UsedCard_summary <- UsedCard_summary %>%
+  mutate(
+    Percentage = round(Count / sum(Count) * 100, 1),
+    Label = paste0(Percentage, "%")
+  )
 
-# 使用ggplot2绘制饼图
-ggplot(usedcard_summary, aes(x = "", y = Count, fill = UsedCard)) +
+ggplot(UsedCard_summary, aes(x = "", y = Count, fill = UsedCard)) +
   geom_bar(stat = "identity", width = 1, color = "white") +
   coord_polar(theta = "y") +
-  theme_void() +  # 移除背景
+  theme_void() +
   labs(title = "UsedCard Distribution (Pie Chart)") +
   geom_text(aes(label = Label), position = position_stack(vjust = 0.5))
 ```
-@fig-figure4 shows the overall distribution of credit card usage (UsedCard). 83.2% of the sample used a credit card (UsedCard=1), while 16.8% of the sample did not (UsedCard=0). It can be seen that the majority chose to use credit cards, which suggests that credit card use may be dominant in the sample.
+
+@fig-figure1 shows the overall distribution of credit card usage (UsedCard). 83.2% of the sample used a credit card (UsedCard=1), while 16.8% of the sample did not (UsedCard=0). It can be seen that the majority chose to use credit cards, which suggests that credit card use may be dominant in the sample.
 
 \newpage
 
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure5
+#| label: fig-figure2
 #| warning: false
 #| message: false
 #| echo:    false
@@ -195,12 +167,12 @@ ggplot(data, aes(x = Sex, fill = UsedCard)) +
   labs(title = "Sex vs UsedCard Distribution", x = "Sex", y = "Count")
 ```
 
-@fig-figure5 shows the distribution of gender (Sex) in relation to card usage (UsedCard). The horizontal axis represents sex (0 is male, 1 is female) and the vertical axis is the sample size. From the graph, it can be seen that both males and females have a significantly higher percentage of card use (UsedCard=1) than not using the card (UsedCard=0), and the overall sample size is slightly higher for females than for males. Gender may have some influence in card use.
+@fig-figure2 shows the distribution of gender (Sex) to card usage (UsedCard). The horizontal axis represents sex (0 is male, 1 is female) and the vertical axis is the sample size. From the graph, it can be seen that both males and females have a significantly higher percentage of card use (UsedCard=1) than not using the card (UsedCard=0), and the overall sample size is slightly higher for females than for males. Gender may have some influence on card use.
 
 \newpage
 
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure6
+#| label: fig-figure3
 #| warning: false
 #| message: false
 #| echo:    false
@@ -210,7 +182,54 @@ ggplot(data, aes(x = Income, fill = UsedCard)) +
   labs(title = "Income Distribution by UsedCard", x = "Income", y = "Count")
 ```
 
-@fig-figure6 shows the distribution of income (Income) in relation to card usage (UsedCard). It can be seen that the number of cards used (UsedCard=1) is significantly higher than the number of cards not used (UsedCard=0), regardless of income group. In addition, there is an increasing trend in the number of cards used as the income level increases (from 1 to 5), especially in the highest income group (Income=5), where the number of card users is the highest. This indicates that those with higher incomes are more inclined to use cards. This may reflect the importance of income level in card use decisions and therefore the need to include it as a control variable.
+@fig-figure3 shows the distribution of income (Income) in relation to card usage (UsedCard). It can be seen that the number of cards used (UsedCard=1) is significantly higher than the number of cards not used (UsedCard=0), regardless of income group. In addition, there is an increasing trend in the number of cards used as the income level increases (from 1 to 5), especially in the highest income group (Income=5), where the number of card users is the highest. This indicates that those with higher incomes are more inclined to use cards. This may reflect the importance of income level in card use decisions and therefore the need to include it as a control variable.
+
+\newpage
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure4
+#| warning: false
+#| message: false
+#| echo:    false
+
+ggplot(data, aes(x = UsedCard, y = Age, fill = UsedCard)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Age Distribution by UsedCard", x = "UsedCard", y = "Age")
+```
+
+@fig-figure4 illustrates the difference in the distribution of age (Age) between the card usage (UsedCard) groups. The median age of the two groups is relatively close to each other, both being around 45 years old and showing a similar central tendency. The distribution of age is slightly wider and more evenly distributed overall for the unused card (UsedCard=0) group, covering a wider age range; in contrast, the distribution is more centralized and less fluctuating for the used card (UsedCard=0) group.
+
+\newpage
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure5
+#| warning: false
+#| message: false
+#| echo:    false
+ggplot(data, aes(x = Edu, fill = UsedCard)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Education vs UsedCard", x = "Education Level", y = "Proportion")
+```
+
+@fig-figure5 illustrates the distribution of the proportions of different education levels (Education Level) in relation to card usage (UsedCard). It can be seen that the proportion of card use (UsedCard=1) is significantly higher than the proportion of no card use (UsedCard=0) for all education level groups. As the level of education increased (from 1 to 3), the proportion using the card gradually increased, while the proportion not using the card decreased. This suggests that education level may influence card use decisions to some extent, and that those with higher levels of education may be more inclined to use cards.
+
+\newpage
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure6
+#| warning: false
+#| message: false
+#| echo:    false
+
+ggplot(data, aes(x = Emp, fill = UsedCard)) +
+  geom_bar(position = "fill") +
+  theme_minimal() +
+  labs(title = "Employment Status vs UsedCard", x = "Employment Status", y = "Proportion")
+```
+
+@fig-figure6 illustrates the relationship between employment status (Employment Status) and card usage (UsedCard). Regardless of whether one is employed or not (0 is not employed, 1 is employed), the percentage of card use (UsedCard=1) is significantly higher than the percentage of no card use (UsedCard=0). It can also be seen that the proportion of people using the card is slightly higher in the employed situation than in the career situation. This may be related to having financial resources and higher repayment capacity when employed.
 
 \newpage
 
@@ -219,55 +238,7 @@ ggplot(data, aes(x = Income, fill = UsedCard)) +
 #| warning: false
 #| message: false
 #| echo:    false
-# Age按UsedCard分组的箱线图
-ggplot(data, aes(x = UsedCard, y = Age, fill = UsedCard)) +
-  geom_boxplot() +
-  theme_minimal() +
-  labs(title = "Age Distribution by UsedCard", x = "UsedCard", y = "Age")
-```
 
-@fig-figure7 illustrates the difference in the distribution of age (Age) between the card usage (UsedCard) groups. The median age of the two groups is relatively close to each other, both being around 45 years old and showing a similar central tendency. The distribution of age is slightly wider and more evenly distributed overall for the unused card (UsedCard=0) group, covering a wider age range; in contrast, the distribution is more centralized and less fluctuating for the used card (UsedCard=0) group.
-
-\newpage
-
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure8
-#| warning: false
-#| message: false
-#| echo:    false
-# 教育程度与UsedCard的堆叠柱状图
-ggplot(data, aes(x = Edu, fill = UsedCard)) +
-  geom_bar(position = "fill") +
-  theme_minimal() +
-  labs(title = "Education vs UsedCard", x = "Education Level", y = "Proportion")
-```
-
-@fig-figure8 illustrates the distribution of the proportions of different education levels (Education Level) in relation to card usage (UsedCard). It can be seen that the proportion of card use (UsedCard=1) is significantly higher than the proportion of no card use (UsedCard=0) for all education level groups. As the level of education increased (from 1 to 3), the proportion using the card gradually increased, while the proportion not using the card decreased. This suggests that education level may influence card use decisions to some extent, and that those with higher levels of education may be more inclined to use cards.
-
-\newpage
-
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure9
-#| warning: false
-#| message: false
-#| echo:    false
-# 7. 使用堆叠柱状图观察就业状态与UsedCard的关系
-ggplot(data, aes(x = Emp, fill = UsedCard)) +
-  geom_bar(position = "fill") +
-  theme_minimal() +
-  labs(title = "Employment Status vs UsedCard", x = "Employment Status", y = "Proportion")
-```
-
-@fig-figure9 illustrates the relationship between employment status (Employment Status) and card usage (UsedCard). Regardless of whether one is employed or not (0 is not employed, 1 is employed), the percentage of card use (UsedCard=1) is significantly higher than the percentage of no card use (UsedCard=0). It can also be seen that the proportion of people using the card is slightly higher in the employed situation than in the career situation. This may be related to having financial resources and higher repayment capacity when employed.
-
-\newpage
-
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure10
-#| warning: false
-#| message: false
-#| echo:    false
-# 8. 热力图：教育程度与性别的UsedCard比例
 heatmap_data <- data %>%
   group_by(Sex, Emp) %>%
   summarise(Count = n(), UsedCard_Rate = mean(as.numeric(UsedCard) - 1))
@@ -279,257 +250,327 @@ ggplot(heatmap_data, aes(x = Sex, y = Emp, fill = UsedCard_Rate)) +
   labs(title = "Heatmap of UsedCard Rate by Sex and Emp", x = "Sex", y = "Emp", fill = "UsedCard Rate")
 ```
 
-
-@fig-figure10 shows the effect of the combination of gender (Sex) and employment status (Emp) on the card utilization rate (UsedCard Rate). The shade of the color indicates the card usage rate; the darker the color, the higher the usage rate. Men (Sex=1) have an overall higher card utilization rate than women (Sex=0), especially in the employed (Emp=1) status, which has the highest card utilization rate. This is consistent with the findings in Figures 1 and 6.
-
+@fig-figure7 shows the effect of the combination of gender (Sex) and employment status (Emp) on the card utilization rate (UsedCard Rate). The shade of the color indicates the card usage rate; the darker the color, the higher the usage rate. Men (Sex=1) have an overall higher card utilization rate than women (Sex=0), especially in the employed (Emp=1) status, which has the highest card utilization rate. This is consistent with the findings in @fig-figure1 and @fig-figure6.
 
 # Model
 
 ## Model set-up
 
-In this study, in order to explore the effects of gender (Sex), employment status (Emp) and its interaction effect (Sex_Emp) on user card usage behavior (UsedCard), logistic regression model was used to model and analyze the data. The logistic regression model is suitable for scenarios where the dependent variable is a dichotomous variable, and can effectively quantify the effect of the independent variable on the dependent variable. The form of the model designed in this paper is as follows:
+In this study, to explore the effects of gender (`Sex`), employment status (`Emp`), and its interaction effect (`Sex_Emp`) on users' card usage behavior (`UsedCard`), a logistic regression model was used to model and analyze the data. The form of the model designed in this paper is as follows:
 
-logit(UsedCard)=β0+β1⋅Sex+β2⋅Emp+β3⋅Sex_Emp+ β4•CVs
+$$
+\text{logit}(\text{UsedCard}) = \beta_0 + \beta_1 \cdot \text{Sex} + \beta_2 \cdot \text{Emp} + \beta_3 \cdot \text{Sex\_Emp} + \gamma \cdot \text{CVs}
+$$
 
-In the above formula
+$$
+\beta_0 \sim \text{Norm}(0,2.5)
+$$
 
-logit(UsedCard) denotes the log odds (log-odds) of whether the user uses the card or not.
-	
-β0 is the intercept term that represents the underlying log odds ratio used by the card when all independent variables are zero.
-	 
-β1⋅Sex denotes the main effect of gender, quantifying the effect of being male (Sex=1) compared to being female (Sex=0) on card use.
-	
-β2⋅Emp denotes the main effect of employment status, quantifying the effect of being employed (Emp=1) on card use compared to not being employed (Emp=0).
-	
-β3⋅Sex_Emp denotes the interaction effect of gender and employment status, which measures the joint effect of gender and employment status on card use behavior.
-	
-β4•CVs denotes the effect of control variables, which include income, age, and education, designed to control for other potential confounders.
-3.2 Model justification
+$$
+\beta_1 \sim \text{Norm}(0,2.5)
+$$
 
-It is hypothesized that gender has a significant effect on card use behavior, as evidenced by the fact that men (Sex=1) are more likely to use cards (𝛽1>0) compared to women (Sex=0). The theoretical basis of this hypothesis lies in the gender differences in spending psychology and behavior:
+$$
+\beta_2 \sim \text{Norm}(0,2.5)
+$$
 
-Men's consumption characteristics: Men usually focus on current needs in their consumption decisions and tend to choose fast and flexible payment methods, such as using credit cards or stored value cards. They are more open to “overspending” and tend to use financial tools to meet immediate consumption needs. In addition, men are usually not responsible for daily financial management in the household and have less need to control daily expenses, and are more likely to accept credit or overdraft spending.
-	
-Consumption characteristics of women: Women tend to take on the role of “householder” in the family finances, they pay more attention to money planning and saving, and have reservations about overspending. Because of the need to consider the family's daily expenses and long-term planning, women may prefer to avoid excessive use of credit cards or similar payment tools and opt for more intuitive and controllable payment methods.
-	
-It is hypothesized that employment status has a significant effect on card use behavior, as evidenced by the fact that employed users (Emp=1) are more likely to use cards (𝛽2>0) compared to non-employed users (Emp=0). The logic of this assumption stems from the direct impact of employment status on income stability and consumption behavior:
+$$
+\beta_3 \sim \text{Norm}(0,2.5)
+$$
 
-Behavioral characteristics of employed users: employed people usually have a stable source of income and greater financial independence, while their consumption scenarios are richer, such as work-related expenses (transportation, food, etc.) or social expenses, which are more suitable for increasing convenience through card payments. In addition, the security of income makes employed people more capable of bearing the responsibility of credit card repayment, increasing the acceptance of card payment tools.
-	
-Behavioral characteristics of underemployed users: underemployed people lack stable financial resources and are more inclined to avoid credit or overdraft-type payment methods in their spending decisions to avoid repayment pressure. This group may rely more on cash or savings payments, limiting the frequency of card use.
-	
-It is hypothesized that there is a significant interaction between gender and employment status (𝛽3 > 0), i.e., that a particular combination of gender and employment status may have a combined effect of reinforcing or inhibiting card use behavior. The logic behind this hypothesis is as follows:
+$$
+\gamma \sim \text{Norm}(0,2.5)
+$$
 
-Unemployed females (Sex=0, Emp=0): this group lacks a stable source of income, while women's rational spending and planning may further limit acceptance of card payments, and thus may be the group with the lowest percentage of card use.
-	
-Employed females (Sex=0, Emp=1): although females tend to spend rationally, the financial security provided by employment may motivate this group to use card payment tools more often when needed.
-	
-Unemployed males (Sex=1, Emp=0): Although males tend to use cards, the uncertainty of income may cause this group to use cards less than employed males.
-	
-Employed males (Sex=1, Emp=1): This group is likely to have the highest rate of card use due to both economic stability (employed) and the fact that males are more likely to overspend.
+In the above formula:
+
+- `logit(UsedCard)` denotes the log odds (log-odds) of whether the user uses the card or not.
+- $\beta_0$ is the intercept term that represents the underlying log odds ratio used by the card when all independent variables are zero.
+- $\beta_1 \cdot \text{Sex}$ denotes the main effect of gender, quantifying the effect of being male ($\text{Sex}=1$) compared to being female ($\text{Sex}=0$) on card use.
+- $\beta_2 \cdot \text{Emp}$ denotes the main effect of employment status, quantifying the effect of being employed ($\text{Emp}=1$) on card use compared to not being employed ($\text{Emp}=0$).
+- $\beta_3 \cdot \text{Sex\_Emp}$ denotes the interaction effect of gender and employment status, which measures the joint effect of gender and employment status on card use behavior.
+- $\gamma \cdot \text{CVS}$ denotes the effect of control variables, which include income, age, and education, designed to control for other potential confounders.
+
+## Model justification
+
+It is hypothesized that gender has a significant effect on card use behavior, as evidenced by the fact that men (Sex=1) are more likely to use cards (𝛽1\>0) compared to women (Sex=0). The theoretical basis of this hypothesis lies in the gender differences in spending psychology and behavior:
+
+-   Men's consumption characteristics: Men usually focus on current needs in their consumption decisions and tend to choose fast and flexible payment methods, such as using credit cards or stored value cards. They are more open to “overspending” and tend to use financial tools to meet immediate consumption needs. In addition, men are usually not responsible for daily financial management in the household have less need to control daily expenses, and are more likely to accept credit or overdraft spending.
+
+-   Consumption characteristics of women: Women tend to take on the role of “householder” in the family finances, they pay more attention to money planning and saving and have reservations about overspending. Because of the need to consider the family's daily expenses and long-term planning, women may prefer to avoid excessive use of credit cards or similar payment tools and opt for more intuitive and controllable payment methods.
+
+It is hypothesized that employment status has a significant effect on card use behavior, as evidenced by the fact that employed users (Emp=1) are more likely to use cards (𝛽2\>0) compared to non-employed users (Emp=0). The logic of this assumption stems from the direct impact of employment status on income stability and consumption behavior:
+
+-   Behavioral characteristics of employed users: employed people usually have a stable source of income and greater financial independence, while their consumption scenarios are richer, such as work-related expenses (transportation, food, etc.) or social expenses, which are more suitable for increasing convenience through card payments. In addition, the security of income makes employed people more capable of bearing the responsibility of credit card repayment, increasing the acceptance of card payment tools.
+
+-   Behavioral characteristics of underemployed users: underemployed people lack stable financial resources and are more inclined to avoid credit or overdraft-type payment methods in their spending decisions to avoid repayment pressure. This group may rely more on cash or savings payments, limiting the frequency of card use.
+
+It is hypothesized that there is a significant interaction between gender and employment status (𝛽3 \> 0), i.e., that a particular combination of gender and employment status may have a combined effect of reinforcing or inhibiting card use behavior. The logic behind this hypothesis is as follows:
+
+-   Unemployed females (Sex=0, Emp=0): this group lacks a stable source of income, while women's rational spending and planning may further limit acceptance of card payments, and thus may be the group with the lowest percentage of card use.
+
+-   Employed females (Sex=0, Emp=1): although females tend to spend rationally, the financial security provided by employment may motivate this group to use card payment tools more often when needed.
+
+-   Unemployed males (Sex=1, Emp=0): Although males tend to use cards, the uncertainty of income may cause this group to use cards less than employed males.
+
+-   Employed males (Sex=1, Emp=1): This group is likely to have the highest rate of card use due to both economic stability (employed) and the fact that males are more likely to overspend.
+
+
 
 # Results
 
+\newpage
+
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: tbl-table19
 #| warning: false
 #| message: false
 #| echo:    false
-#| results: hide
-tab_model(model1, show.intercept = TRUE, show.se = TRUE, show.stat = TRUE, show.std = TRUE,
-          show.r2 = TRUE, p.style = "numeric_stars", show.obs = FALSE, title = "Regreesion")
 
+model1 <- readRDS("./model/model1.rds")
+model2 <- readRDS("./model/model2.rds")
 ```
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: tbl-table20
+```{r, fig.width=6, fig.height=3, fig.align='center',results='asis'}
+#| label: tbl-table3
 #| warning: false
 #| message: false
 #| echo:    false
-#| results: hide
-tab_model(model2, show.intercept = TRUE, show.se = TRUE, show.stat = TRUE, show.std = TRUE,
-          show.r2 = TRUE, p.style = "numeric_stars", show.obs = FALSE, title = "Regreesion")
+
+stargazer_output <- capture.output(
+  stargazer(
+    model1, model2,
+    type = "text",
+    report = "vcp",
+    align = TRUE,
+    no.space = FALSE,
+    style = "default",
+    digits = 3
+  )
+)
+
+stargazer_df <- data.frame(Output = stargazer_output)
+
+kable(
+  stargazer_df,
+  caption = "Regression Results for Model 1 and Model 2",
+  format = "html",
+  align = "c"
+)
 ```
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: tbl-table2
-#| warning: false
-#| message: false
-#| echo:    false
-stargazer(model1,model2,
-          type="text",
-          report = ('c*t'),
-          title = "Logistic Regression Results",
-          align = TRUE,
-          no.space = FALSE,
-          style = "default",
-          digits = 3)
-          #out = "logistic_regression_table.html")
-```
+@tbl-table3 shows the results of the logistic regressions. I ran two regressions, regression (1) did not include an interaction term for gender and employment and was the baseline model used as a control. Regression (2) adds the interaction term to verify the change in the model before and after the addition of the interaction term. Meanwhile, @fig-figure8 illustrates the interaction effect of gender (Sex) and employment status (Emp) on the predicted probability of card use behavior (UsedCard). The horizontal axis represents employment status, the vertical axis represents the predicted probability of card use, and the blue solid and dashed lines represent the trend of predicted probability for different genders, respectively.
+
+In Model (1), the Sex coefficient is 0.073 and significant (p \< 0.05), indicating that gender has a statistically significant effect on card use behavior. In Model (2), the Sex coefficient decreases to 0.045 and is not significant (p \> 0.1), indicating that the independent effect of gender diminishes after controlling for the interaction term.
+
+In Model (1), the coefficient of Emp is significant (p \< 0.01) at 0.225. In model (2), the coefficient of Emp decreases slightly to 0.208 but is still significant (p \< 0.01). Regardless of whether the interaction term is considered or not, the log odds of card use are significantly higher for those who are employed (Emp = 1) compared to those who are not employed (Emp = 0). Employment status remains a strong influence in Model (2) even after accounting for the interaction effect. The effect of employment status is significant and stable in both models, suggesting that the employed population is more inclined to use card payment instruments due to increased financial security and spending scenarios. Employment status is one of the core drivers.
+
+In Model (2), the coefficient of the interaction term Sex_Emp is 0.038 but not significant (p \> 0.1). This suggests that the effects of gender and employment status may be independent, rather than enhancing or weakening card-use behavior through a joint effect.
 
 \newpage
 
-@tbl-table2 shows the results of the logistic regressions. I ran two regressions, regression (1) did not include an interaction term for gender and employment and was the baseline model used as a control. Regression (2) adds the interaction term with the purpose of verifying the change in the model before and after the addition of the interaction term. Meanwhile, Figure 8 illustrates the interaction effect of gender (Sex) and employment status (Emp) on the predicted probability of card use behavior (UsedCard). The horizontal axis represents employment status, the vertical axis represents the predicted probability of card use, and the blue solid and dashed lines represent the trend of predicted probability for different genders, respectively.
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure8
+#| warning: false
+#| message: false
+#| echo:    false
 
-In Model (1), the Sex coefficient is 0.073 and significant (p < 0.05), indicating that gender has a statistically significant effect on card use behavior. In Model (2), the Sex coefficient decreases to 0.045 and is not significant (p > 0.1), indicating that the independent effect of gender diminishes after controlling for the interaction term. 
+interact_plot(model2,
+  pred = Emp, modx = Sex,
+  interval = TRUE,
+  modx.labels = c("Female (Sex=0)", "Male (Sex=1)"),
+  pred.labels = c("Not Employed (Emp=0)", "Employed (Emp=1)"),
+  main.title = "Interaction Effect: Employment and Gender",
+  y.label = "Predicted Probability of UsedCard"
+)
+```
 
-In Model (1), the coefficient of Emp is significant (p < 0.01) at 0.225. In model (2), the coefficient of Emp decreases slightly to 0.208, but is still significant (p < 0.01). Regardless of whether the interaction term is considered or not, the log odds of card use are significantly higher for those who are employed (Emp = 1) compared to those who are not employed (Emp = 0). Employment status remains a strong influence in Model (2) even after accounting for the interaction effect. The effect of employment status is significant and stable in both models, suggesting that the employed population is more inclined to use card payment instruments due to increased financial security and spending scenarios. Employment status is one of the core drivers.
-
-From the interaction effects plot, the predicted probability of card use increased significantly when employment status went from not employed (Emp=0) to employed (Emp=1), regardless of gender. This suggests that employment status has a positive effect on card use behavior. The stable income and financial security that comes with employment may make users more inclined to use cards. The probability of card use was consistently higher for males (Sex=1) than for females (Sex=0), both in the non-employed and employed status. This may reflect the tendency for men to overspend or to accept card payment instruments more readily, which is consistent with the positive coefficients of the regression results.
-
-In Model (2), the coefficient of the interaction term Sex_Emp is 0.038 but not significant (p > 0.1). This suggests that the effects of gender and employment status may be independent, rather than enhancing or weakening card-use behavior through a joint effect.
-
+@fig-figure8 shows the predicted probability of card use increased significantly when employment status went from not employed (Emp=0) to employed (Emp=1), regardless of gender. This suggests that employment status has a positive effect on card use behavior. The stable income and financial security that comes with employment may make users more inclined to use cards. The probability of card use was consistently higher for males (Sex=1) than for females (Sex=0), both in the non-employed and employed status. This may reflect the tendency for men to overspend or to accept card payment instruments more readily, which is consistent with the positive coefficients of the regression results.
 
 # Discussion
 
 ## Sex and UsedCard
+
 In model (1), males (gender = 1) are more likely to use bank cards than females (gender = 0), with a 0.073 increase in the log odds of using a bank card, whereas the coefficient for gender becomes insignificant in model (2), suggesting that the independent effect of gender is weakened by the inclusion of an interaction term, which suggests that gender may not be a central factor directly influencing bank card use. From the interaction effect plot, regardless of employment or not, the probability of card use is always higher for men than for women, but the gap does not significantly widen or narrow. This is consistent with the regression results, suggesting that the effect of gender is independent and stable, rather than being strengthened through a joint effect with employment status.
 
 ## Emp and UsedCard
-Employment status (Emp) shows a significant positive impact in both models (1) and (2) (coefficients of 0.225 and 0.208 respectively, p < 0.01). This suggests that those who are employed (Emp=1) are more inclined to use cards than those who are not employed (Emp=0) and this trend remains significant after controlling for other variables. The interaction effects plot further supports this finding. The effect of employment status on card use behavior was consistent regardless of gender. Employed users have a significantly higher probability of card use than non-employed users because of their increased financial security and spending power, suggesting that employment status is one of the core drivers of credit card use.
+
+Employment status (Emp) shows a significant positive impact in both models (1) and (2) (coefficients of 0.225 and 0.208 respectively, p \< 0.01). This suggests that those who are employed (Emp=1) are more inclined to use cards than those who are not employed (Emp=0) and this trend remains significant after controlling for other variables. The interaction effects plot further supports this finding. The effect of employment status on card use behavior was consistent regardless of gender. Employed users have a significantly higher probability of card use than non-employed users because of their increased financial security and spending power, suggesting that employment status is one of the core drivers of credit card use.
 
 ## Sex_Emp and UsedCard
+
 The insignificant intercept of Sex_Emp and the essentially parallel curves of the interaction effects plot indicate that the increase in card use probability is similar across genders in response to changes in employment status. This suggests that gender and employment status act more independently on card-use behavior rather than being interdependent or amplifying the effect through joint action. Therefore, future research or policy practice should focus more on the independent effects of these two variables rather than emphasizing their interaction.
 
 In conclusion, although gender and employment status separately influenced card use behavior, the interaction effect did not show a significant effect. This could mean that the effects of gender are more consistent across employment status and are not significantly enhanced or diminished by changes in employment status.
 
 ## Impact of the remaining variables
 
-The regression coefficients for Age, Income and Edu are significant in both Model (1) and Model (2). The coefficient of 0.004 for Age indicates that the log odds of card usage increases slightly with age. The possible explanation is that with age, people are more inclined to use financial instruments as their incomes become more stable and their financial habits more mature. The regression coefficient for income is 0.026, indicating a positive effect of income level on card use. This is in line with expectations as higher income people have greater spending power and repayment ability and are more willing to use cards to make payments and manage their finances. The coefficient of 0.346 for education level is the control variable with the largest coefficient among all the variables. This suggests that people with high level of education are more inclined to use cards, probably because they are more aware and accepting of the advantages of modern financial instruments, such as convenience and credit accumulation.
+The regression coefficients for Age, Income, and Edu are significant in both Model (1) and Model (2). The coefficient of 0.004 for Age indicates that the log odds of card usage increase slightly with age. The possible explanation is that with age, people are more inclined to use financial instruments as their incomes become more stable and their financial habits more mature. The regression coefficient for income is 0.026, indicating a positive effect of income level on card use. This is in line with expectations as higher-income people have greater spending power and repayment ability and are more willing to use cards to make payments and manage their finances. The coefficient of 0.346 for education level is the control variable with the largest coefficient among all the variables. This suggests that people with a high level of education are more inclined to use cards, probably because they are more aware and accepting of the advantages of modern financial instruments, such as convenience and credit accumulation.
 
 ## Policy Implications
-Employment status is an important factor affecting credit card use. For those who are already employed, financial institutions can design credit card services centered on work scenarios, such as payroll cards with credit features or career-specific credit cards. The probability of credit card usage significantly increases after women are employed. Financial institutions should pay more attention to the female population, especially by designing card products that target women's needs, such as family consumption cards, education savings cards or low-risk credit cards, to further incentivize women's participation in modern financial services. At the same time, the policy level should support job growth, especially the employment rate of women, in order to promote the growth of credit card market demand.
+
+Employment status is an important factor affecting credit card use. For those who are already employed, financial institutions can design credit card services centered on work scenarios, such as payroll cards with credit features or career-specific credit cards. The probability of credit card usage significantly increases after women are employed. Financial institutions should pay more attention to the female population, especially by designing card products that target women's needs, such as family consumption cards, education savings cards, or low-risk credit cards, to further incentivize women's participation in modern financial services. At the same time, the policy level should support job growth, especially the employment rate of women, to promote the growth of credit card market demand.
 
 ## Weaknesses and Next Steps
+
 Although this study reveals the independent effects of gender (Sex) and employment status (Emp) on credit card use behavior and their potential interactions, there are still some limitations that require further research and improvement.
 
 **Limitations of the data**: This study uses cross-sectional data that cannot capture the dynamic effects of variables over time. For example, there may be a reverse causal effect between employment status and credit card use that needs to be further verified with longitudinal data.
 
 **Potential Effects of Control Variables**: Although this study controlled for income, age, and education level, these variables themselves may have mediated the effects of gender and employment status. The causal chain between the variables could be analyzed more deeply in the future through structural equation modeling.
 
-**Insufficiently Considered Group Differences**: Different regions, types of occupations, or cultural backgrounds may have a significant impact on credit card usage behavior. Future research should expand the sample coverage and analyze the moderating effects of regional or socioeconomic factors.
-
+**Insufficiently Considered Group Differences**: Different regions, types of occupations, or cultural backgrounds may have a significant impact on credit card usage behavior. Future research should expand the sample coverage and analyze the moderating effects of regional or socioeconomic differences.
 
 # Appendix
+
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure1
+#| format: html
+#| label: tbl-table4
 #| warning: false
 #| message: false
 #| echo:    false
-#| results: hide
-# 可视化交互效应
-interact_plot(model2, pred = Emp, modx = Sex,
-              interval = TRUE, 
-              modx.labels = c("Female (Sex=0)", "Male (Sex=1)"),
-              pred.labels = c("Not Employed (Emp=0)", "Employed (Emp=1)"),
-              main.title = "Interaction Effect: Employment and Gender",
-              y.label = "Predicted Probability of UsedCard")
+
+model1_results <- tidy(model1)
+
+kable(
+  model1_results,
+  caption = "Regression Results for Model 1",
+  col.names = c("Term", "Estimate", "Std. Error", "Statistic", "P-Value"),
+  format = "html",
+  digits = 3,
+  align = "c"
+)
 ```
 
+@tbl-table4 shows the results of the logistic regression model (1). The table contains all the detailed statistical information for the regression model, including the estimate, standard error (std. error), statistic, and p-value (p.value). The regression results depicted in the table are consistent with the results disclosed in the model (1) in the body section of the article. Note that model (1) does not contain an interaction term and is used as a baseline model to compare with model (2).
+
+\newpage
+
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure2
+#| label: fig-figure9
 #| warning: false
 #| message: false
 #| echo:    false
-#| results: hide
-model_coef <- tidy(model2, conf.int = TRUE)
+var_importance <- varImp(model1)
 
-# 绘制系数图
+ggplot(var_importance, aes(x = row.names(var_importance), y = Overall)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black", width = 0.7) +
+  coord_flip() +
+  labs(
+    title = "Variable Importance (Horizontal Bar Chart)",
+    x = "Variables",
+    y = "Importance Score"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
+  )
+```
+
+@fig-figure9 shows the importance scores of the variables in the logistic regression model (1), and it can be seen that the three control variables ranked in the top three in terms of importance. The importance of the relevance of these control variables as important factors affecting the use of credit cards is verified in the importance score. This indicates that the control variables selected in this paper are important and valid.
+
+\newpage
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure10
+#| warning: false
+#| message: false
+#| echo:    false
+
+model_coef <- tidy(model1, conf.int = TRUE)
+
 ggplot(model_coef, aes(x = term, y = estimate)) +
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
   coord_flip() +
-  labs(title = "Logistic Regression Coefficients",
-       x = "Predictor Variables",
-       y = "Estimate (log-odds)") +
+  labs(
+    title = "Logistic Regression Coefficients",
+    x = "Predictor Variables",
+    y = "Estimate (log-odds)"
+  ) +
   theme_minimal()
 ```
 
+@fig-figure10 shows the 95% confidence intervals for the regression coefficients of the variables in the logistic regression model (1). The most significant variables are Edu and Emp. The confidence intervals for these two variables lie exactly to the right of zero, indicating that they have a statistically significant positive effect on credit card use. The larger estimated coefficient and narrower confidence interval for Edu indicate that education has a stronger and more consistently positive effect on credit card use, while the coefficient and confidence interval for Emp are also larger, indicating that employment status has a significant and stronger effect on credit card use. In contrast, the confidence intervals for Sex and Income are close to zero, but the range of fluctuations for Incomede is smaller, making it more significant.
+
+\newpage
 
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure13
+#| format: html
+#| label: tbl-table5
 #| warning: false
 #| message: false
 #| echo:    false
-#| results: hide
-var_importance <- varImp(model2)
 
-ggplot(var_importance, aes(x = row.names(var_importance), y = Overall )) +
-  geom_bar(stat = "identity", fill = "skyblue", color = "black", width = 0.7) +
-  coord_flip() +
-  labs(
-    title = "Variable Importance (Horizontal Bar Chart)",
-    x = "Variables",
-    y = "Importance Score"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 12),
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14)
-  )
+model2_results <- tidy(model2)
+
+kable(
+  model2_results,
+  caption = "Regression Results for Model 2",
+  col.names = c("Term", "Estimate", "Std. Error", "Statistic", "P-Value"),
+  format = "html",
+  digits = 3,
+  align = "c"
+)
 ```
 
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure12
-#| warning: false
-#| message: false
-#| echo:    false
-#| results: hide
-var_importance <- varImp(model1)
+@tbl-table5 shows the results of the logistic regression model (2). The table contains all the detailed statistical information of the regression model, including estimates, standard errors (std. error), statistics, and p-values (p.value). The regression results described in the table are consistent with the results of model (2) disclosed in the main part of the article. It can be seen that with the addition of the interaction term Sex_Emp, the intercept of Sex is significantly lower and the standard error is significantly higher, resulting in a lower statistic and weaker significance for Sex.
 
-ggplot(var_importance, aes(x = row.names(var_importance), y = Overall )) +
-  geom_bar(stat = "identity", fill = "skyblue", color = "black", width = 0.7) +
-  coord_flip() +
-  labs(
-    title = "Variable Importance (Horizontal Bar Chart)",
-    x = "Variables",
-    y = "Importance Score"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 12),
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14)
-  )
-```
-
-```{r, fig.width=6, fig.height=3, fig.align='center'}
-#| label: fig-figure3
-#| warning: false
-#| message: false
-#| echo:    false
-#| results: hide
-ggplot(data, aes(x = UsedCard, fill = UsedCard)) +
-  geom_bar() +
-  theme_minimal() +
-  labs(title = "Distribution of UsedCard", x = "UsedCard", y = "Count")
-```
-
+\newpage
 
 ```{r, fig.width=6, fig.height=3, fig.align='center'}
 #| label: fig-figure11
 #| warning: false
 #| message: false
 #| echo:    false
-# 提取模型系数
-model_coef <- tidy(model1, conf.int = TRUE)
+var_importance <- varImp(model2)
 
-# 绘制系数图
+ggplot(var_importance, aes(x = row.names(var_importance), y = Overall)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black", width = 0.7) +
+  coord_flip() +
+  labs(
+    title = "Variable Importance (Horizontal Bar Chart)",
+    x = "Variables",
+    y = "Importance Score"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14)
+  )
+```
+
+@fig-figure11 shows a plot of the importance scores of the variables in the logistic regression model (2), and it can be seen that the three control variables still rank in the top three in terms of importance with the inclusion of the interaction term. However, the importance of Sex drops significantly after adding the interaction term again and becomes the least important variable.
+
+\newpage
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+#| label: fig-figure12
+#| warning: false
+#| message: false
+#| echo:    false
+
+model_coef <- tidy(model2, conf.int = TRUE)
+
 ggplot(model_coef, aes(x = term, y = estimate)) +
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
   coord_flip() +
-  labs(title = "Logistic Regression Coefficients",
-       x = "Predictor Variables",
-       y = "Estimate (log-odds)") +
+  labs(
+    title = "Logistic Regression Coefficients",
+    x = "Predictor Variables",
+    y = "Estimate (log-odds)"
+  ) +
   theme_minimal()
 ```
 
+@fig-figure12 shows the 95% confidence intervals for the regression coefficients of the variables in the logistic regression model (2). The basic conclusions are consistent with @fig-figure10. The difference, however, is that with the addition of the interaction term, the confidence interval for Sex contains 0, indicating that it is no longer significant. However, the other variable studied in this paper, income, although still close to 0, still has a small range of fluctuation, which leads to its high significance.
 
 \newpage
 
