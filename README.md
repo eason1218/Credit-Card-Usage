@@ -10,8 +10,8 @@ This study utilized data from [global findex](https://www.worldbank.org/en/publi
 
 The repo is structured as:
 
--   `data/raw_data` will be finish soon.
--   `data/analysis_data` will be finish soon.
+-   `data/raw_data` contains the raw data as obtained from FiveThirtyEight_Polls.
+-   `data/analysis_data` contains the cleaned dataset that was constructed.
 -   `models` contains fitted models. 
 -   `other` contains about literature, LLM chat interactions, and sketches.
 -   `paper` contains the files used to generate the paper, including the Quarto document and reference bibliography file, as well as the PDF of the paper. 
